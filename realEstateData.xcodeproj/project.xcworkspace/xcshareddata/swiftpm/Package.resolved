@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "SwiftUICharts",
+        "repositoryURL": "https://github.com/AlexanderDubois/ChartView.git",
+        "state": {
+          "branch": "master",
+          "revision": "ef31d908d26dbc764b77480fa32156f90bbadc98",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}
