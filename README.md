@@ -2,6 +2,8 @@
 
 > Ett verktyg för att analyera fastighetsdata, såsom prisutveckling för olika bostadsområden. Projekt består av en MacOS app byggd med Swif, samt en Flask (Python) API som backend.
 
+![](real_estate.gif)
+
 ### Backend:
 Flask API för att hämta, sortera och analyera fastighetesdata ifrån Booli.
 Primära teknologier:
