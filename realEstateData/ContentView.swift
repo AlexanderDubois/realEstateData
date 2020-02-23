@@ -9,25 +9,8 @@
 import SwiftUI
 import Cocoa
 import SwiftUICharts
-/*
 
- Eventuella funktioner:
- -Se gatan, området, kommunen, staden med högst prisutveckling de sensatse x åren
- -Prisutveckling för dem med låg avgift (rent i apiet)
- 
- -Booli innehåller om det är nyproduktion, jämför prisutveckling av dessa.
- -Jämföra med inflyttnings statistik ifrån SCB
- -Jämför ekonomi rating ifrån allabrf mot prisutveckling
-
- -Mäklare som ger högst slutpris (frågan är dock hur man skall beräkna detta?)
- -Hitta objekt med ordet 'juridisk person' i texten.
- -Prisutveckling för en förening, den med bäst i ett område
- 
-*/
-
-let localHost = "http://127.0.0.1:5000/"
-
-//Structures for our json data
+//Structures for json data:
 
 struct PriceTrendsPerRoom: Codable {
     var max: [PriceDataPoint]
@@ -36,13 +19,13 @@ struct PriceTrendsPerRoom: Codable {
     var threeRooms: [PriceDataPoint]
 }
 
-struct ServerError : Codable {
-    var errorMessage: String
-}
-
 struct PriceDataPoint: Codable {
     var date: String
     var price: Double
+}
+
+struct ServerError : Codable {
+    var errorMessage: String
 }
 
 struct Listing: Codable {
@@ -55,173 +38,36 @@ struct Listing: Codable {
     var url: String
 }
 
-/*class API {
-    let listingsEndpoint = "listings"
-    let pricesEndpoint = "prices"
-    let localHost = "http://127.0.0.1:5000/"
-    
-    func getPriceData(area: String, url: URL) {
-      
-        //Configures the URLSession to wait longer for response
-        let sessionConfig = URLSessionConfiguration.default
-        sessionConfig.timeoutIntervalForRequest = 150.0
-        sessionConfig.timeoutIntervalForResource = 250.0
-        
-        //Request to server
-        let task = URLSession(configuration: sessionConfig).dataTask(with: url) { (data, response, error) in
-            
-            if self.responseError(response: response, data: data, error: error) { return }
-            
-            if let data = data {
-                
-                //Tries to decode data into proper structure
-                if let decodedData = try? JSONDecoder().decode(PriceTrendsPerRoom.self, from: data) {
-                    
-                    //Change to main thread to update the UI
-                    DispatchQueue.main.async {
-                        if decodedData.max.count >= minimumNumberOfDataPoints {
-                            self.prices = decodedData
-                        }
-                        else {
-                            self.errorMessage = "Couldn't fetch enough data for analysis"
-                        }
-                        
-                        self.isLoading = false
-                        
-                    }
-                }
-            }
-            
-        }
-        task.resume()
-    }
-    
-    func responseError(response : URLResponse?, data: Data?, error: Error?) -> Bool {
-        
-        if let error = error {
-            print("error: \(error)")
-            self.isLoading = false
-            return true
-        }
-        
-        if let response = response as? HTTPURLResponse {
-            
-            //Handles all statuscodes, except 200, as errors
-            if response.statusCode != 200 {
-                if let data = data {
-                    if let decodedData = try? JSONDecoder().decode(ServerError.self, from: data) {
-                        
-                        self.isLoading = false
-                        self.errorMessage = decodedData.errorMessage
-                    }
-                    
-                }
-                return true
-            }
-            print("statusCode: \(response.statusCode)")
-        }
-        
-        return false
-    }
-    
-    func getAllData(area: String) {
-        self.isLoading = true
-        
-        if let listingsUrl = self.getUrl(endPoint: listingsEndpoint, area: area), let pricesUrl = self.getUrl(endPoint: pricesEndpoint, area: area) {
-            
-            self.getPriceData(area: area, url: pricesUrl)
-            self.getListings(area: area, url: listingsUrl)
-        }
-        
-    }
-    
-    func getUrl(endPoint: String, area: String) -> URL? {
-        
-        let area = swedishWordToURL(word: area.lowercased())
-        
-        guard let url = URL(string:localHost + "\(endPoint)/\(area)") else {
-            print("invalid url")
-            self.errorMessage = "Invalid area, please try again"
-            self.isLoading = false
-            return nil
-        }
-        
-        return url
-    }
-    
-    func getListings(area: String, url: URL) {
-        
-        let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
-            
-            if self.responseError(response: response, data: data, error: error) { return }
-            
-            if let data = data {
-                
-                //Tries to decode data into proper structure
-                if let decodedData = try? JSONDecoder().decode([Listing].self, from: data) {
-                    
-                    //Change to main thread to update the UI
-                    DispatchQueue.main.async {
-                        
-                        self.listings = decodedData
-                        
-                    }
-                }
-            }
-            
-        }
-        task.resume()
-    }
-    
-    func swedishWordToURL(word : String) -> String{
-        var swedishWord : String = ""
-        for letter in word {
-            
-            if letter == "ö" {
-                swedishWord += "%C3%B6"
-            }
-            else if letter == "ä" {
-                swedishWord += "%C3%A4"
-            }
-            else if letter == "å" {
-                swedishWord += "%C3%A5"
-            }
-            else {
-                swedishWord += String(letter)
-            }
-        }
-        return swedishWord
-    }
-
-    
-}*/
-
-func swedishWordToURL(word : String) -> String{
-    var swedishWord : String = ""
-    for letter in word {
-        
-        if letter == "ö" {
-            swedishWord += "%C3%B6"
-        }
-        else if letter == "ä" {
-            swedishWord += "%C3%A4"
-        }
-        else if letter == "å" {
-            swedishWord += "%C3%A5"
-        }
-        else {
-            swedishWord += String(letter)
-        }
-    }
-    return swedishWord
+struct PickerData {
+    var title: String
+    var options: [PickerOption]
 }
 
-//TODO Structure functions better, maybe an API class
+struct PickerOption {
+    var text: String
+    var tag: Int
+}
 
+//Data model for picker options:
+let numberOfRoomsOptions = [PickerOption(text: "All", tag: 0),
+                            PickerOption(text: "1", tag: 1),
+                            PickerOption(text: "2", tag: 2),
+                            PickerOption(text: "3", tag: 3)]
 
+let numberOfRoomsPickerData = PickerData(title: "Filter by number of rooms", options: numberOfRoomsOptions)
+
+let intervalOptions = [PickerOption(text: "Max", tag: 0),
+                       PickerOption(text: "1 year", tag: 1),
+                       PickerOption(text: "2 years", tag: 2),
+                       PickerOption(text: "3 years", tag: 3)]
+
+let intervalsPickerData = PickerData(title: "Price trends per year", options: intervalOptions)
+
+//Constants:
 let defaultTrend = PriceTrendsPerRoom(max: [], oneRoom: [], twoRooms: [], threeRooms: [])
 let minimumNumberOfDataPoints = 5
 
+let localHost = "http://127.0.0.1:5000/"
 let listingsEndpoint = "listings"
 let pricesEndpoint = "prices"
 
@@ -239,6 +85,7 @@ struct ContentView: View {
     
     @State private var isLoading : Bool = false
     
+    //Retrives average square meter price trend for area
     func getPriceData(area: String, url: URL) {
       
         //Configures the URLSession to wait longer for response
@@ -275,6 +122,7 @@ struct ContentView: View {
         task.resume()
     }
     
+    //Returns true if an error occur else returns false
     func responseError(response : URLResponse?, data: Data?, error: Error?) -> Bool {
         
         if let error = error {
@@ -288,6 +136,7 @@ struct ContentView: View {
             //Handles all statuscodes, except 200, as errors
             if response.statusCode != 200 {
                 if let data = data {
+                    //If an http error occurs the backend sends a json in the ServerError structure, thus it tries to decode the json data into the ServerError structure
                     if let decodedData = try? JSONDecoder().decode(ServerError.self, from: data) {
                         
                         self.isLoading = false
@@ -303,9 +152,11 @@ struct ContentView: View {
         return false
     }
     
+    //Fetches both price data and current listings for an area
     func getAllData(area: String) {
         self.isLoading = true
         
+        //Unwraps optional URLs
         if let listingsUrl = self.getUrl(endPoint: listingsEndpoint, area: area), let pricesUrl = self.getUrl(endPoint: pricesEndpoint, area: area) {
             
             self.getPriceData(area: area, url: pricesUrl)
@@ -314,9 +165,34 @@ struct ContentView: View {
         
     }
     
+    //Checks and converts letters to correct url charecters
+    func textToURL(text : String) -> String{
+        var currentText : String = ""
+        for letter in text {
+            
+            if letter == "ö" {
+                currentText += "%C3%B6"
+            }
+            else if letter == "ä" {
+                currentText += "%C3%A4"
+            }
+            else if letter == "å" {
+                currentText += "%C3%A5"
+            }
+            else if letter == " " {
+                currentText += "%20"
+            }
+            else {
+                currentText += String(letter)
+            }
+        }
+        return currentText
+    }
+    
+    //Checks if conversion from string to url is correct, if not it returns nil
     func getUrl(endPoint: String, area: String) -> URL? {
         
-        let area = swedishWordToURL(word: area.lowercased())
+        let area = self.textToURL(text: area.lowercased())
         
         guard let url = URL(string:localHost + "\(endPoint)/\(area)") else {
             print("invalid url")
@@ -328,6 +204,7 @@ struct ContentView: View {
         return url
     }
     
+    //Fetch listings from the Flask API, updates listings if data is decoded into Listings structure
     func getListings(area: String, url: URL) {
         
         let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
@@ -352,9 +229,10 @@ struct ContentView: View {
         task.resume()
     }
     
-    
+    //returns the min date from current data
     func getMinDate(priceDateData: [PriceDataPoint], interval: Int = 0) -> String{
         if interval == 0 {
+            //gets the latest possible date
             if let lastDataPoint = priceDateData.last {
                 return lastDataPoint.date
             }
@@ -367,10 +245,12 @@ struct ContentView: View {
             
             let minYear = currentYear - interval
             
+            //Returns the min date, i.e the current year - the current interval, ex: 2019 - 10
             return "\(minYear) - \(currentMonth)"
         }
     }
     
+    //Date input should follow the structure of "year - month". If year exists, returns the year as an int else returns 0
     func getYear(date: String) -> Int {
         if let year = date.components(separatedBy: " ").first {
             return Int(year)!
@@ -378,6 +258,7 @@ struct ContentView: View {
         return 0
     }
     
+    //Date input should follow the structure of "year - month". If month exists, returns the month as an int else returns 0
     func getMonth(date: String) -> Int {
         if let month = date.components(separatedBy: " ").last {
             return Int(month)!
@@ -385,9 +266,10 @@ struct ContentView: View {
         return 0
     }
     
-    func dataForRoom(prices: PriceTrendsPerRoom, numberOdRomms: Int) -> [PriceDataPoint]{
+    //Since the data retrived from the server is catogarized by number of rooms (see data models above), this function returns prices for the currently selected number of rooms.
+    func dataForRoom(prices: PriceTrendsPerRoom, numberOfRooms: Int) -> [PriceDataPoint]{
         
-        switch numberOdRomms {
+        switch numberOfRooms {
         case 0:
              return prices.max
         case 1:
@@ -402,18 +284,20 @@ struct ContentView: View {
         }
     }
     
+    //Converts the data, following the PriceTrendsPerRoom structure, into an array of Doubles
     func pricesToDoubles(prices: PriceTrendsPerRoom, interval: Int = 0, numberOdRomms: Int = 0) -> [Double]{
         
-        let priceDateData = self.dataForRoom(prices: prices, numberOdRomms: numberOdRomms)
-        
-        let minDate = getMinDate(priceDateData: priceDateData, interval: interval)
-        
+        let priceDateData = self.dataForRoom(prices: prices, numberOfRooms: numberOdRomms)
         var prices : [Double] = []
+        
         for dataPoint in priceDateData {
             
             prices.append(dataPoint.price)
             
+            let minDate = getMinDate(priceDateData: priceDateData, interval: interval)
             let currentDate = dataPoint.date
+            
+            //breaks out of loop if the date is euquall to or exceeds the minimum date
             if interval != 0 {
                 if currentDate == minDate || (self.getYear(date: currentDate) <= self.getYear(date: minDate) && (self.getMonth(date: currentDate) <= self.getMonth(date: minDate))){
                     break
@@ -424,6 +308,7 @@ struct ContentView: View {
         return prices.reversed()
     }
     
+    //Body of the content view, this is the parent view. The view contains conditional rendering, depending on the states variables
     var body: some View {
         
         VStack {
@@ -434,46 +319,40 @@ struct ContentView: View {
             
             VStack(alignment: .leading) {
                 
+                //If loading, displays the loading indicator
                 if self.isLoading {
                     LoadingIndicator()
                 }
                 else {
                     
+                    //If error exits, displays a view showing the error message
                     if !errorMessage.isEmpty {
                         ErrorView(errorMessage: $errorMessage)
                     }
                     
-                    if self.dataForRoom(prices: self.prices, numberOdRomms: self.numberOfRooms).count != 0 {
+                    //Checks that prices exists
+                    if self.dataForRoom(prices: self.prices, numberOfRooms: self.numberOfRooms).count != 0 {
                         
                         VStack(alignment: .leading) {
                             Text("Price trends for \(self.areaTitel) (SEK/m2)").fontWeight(.heavy).font(.title)
                             
                             PercentageChangeView(prices: self.pricesToDoubles(prices: self.prices, interval: self.timeInterval, numberOdRomms: self.numberOfRooms))
                             
-                            Picker("Filter by number of rooms", selection: $numberOfRooms) {
-                                Text("All").tag(0)
-                                Text("1").tag(1)
-                                Text("2").tag(2)
-                                Text("3").tag(3)
-                                }.pickerStyle(SegmentedPickerStyle()).frame(width: 400)
+                            PickerView(bindingValue: $numberOfRooms, data: numberOfRoomsPickerData)
                             
-                            Picker("Price trends per year", selection: $timeInterval) {
-                                Text("Max").tag(0)
-                                Text("1 year").tag(1)
-                                Text("2 years").tag(2)
-                                Text("3 years").tag(3)
-                                }.pickerStyle(SegmentedPickerStyle()).frame(width: 400)
+                            PickerView(bindingValue: $timeInterval, data: intervalsPickerData)
                             
                         }.padding(.horizontal, 8)
                         
+                        //The LineView displays the price trend graph. Accepts an array of doubles as data input. Startdate and endDate should follow the date convention of "year - month"
                         LineView(
                                 data: self.pricesToDoubles(prices:self.prices, interval: self.timeInterval, numberOdRomms: self.numberOfRooms),
                                 
-                                startDate: self.getMinDate(priceDateData: self.dataForRoom(prices: self.prices, numberOdRomms: self.numberOfRooms),
+                                startDate: self.getMinDate(priceDateData: self.dataForRoom(prices: self.prices, numberOfRooms: self.numberOfRooms),
                                                            
                                 interval: self.timeInterval),
                                 
-                                endDate: self.dataForRoom(prices: self.prices, numberOdRomms: self.numberOfRooms)[0].date
+                                endDate: self.dataForRoom(prices: self.prices, numberOfRooms: self.numberOfRooms)[0].date
                         )
                         
                         ListingsView(area: self.areaTitel, listings: self.listings)
@@ -489,6 +368,24 @@ struct ContentView: View {
     }
 }
 
+//VIEWS:
+
+//Picker that creates options from picker data. On user interaction, updates the binding value
+struct PickerView : View {
+    
+    @Binding var bindingValue : Int
+    var data : PickerData
+    
+    var body: some View {
+        Picker(selection: $bindingValue, label: Text(data.title)) {
+            ForEach(self.data.options, id: \.tag) { option in
+                Text("\(option.text)").tag(option.tag)
+            }
+        }.pickerStyle(SegmentedPickerStyle()).frame(width: 400)
+    }
+}
+
+//Parent view for all listings. Creates a ListingsView for every listing.
 struct ListingsView : View {
     var area: String
     var listings : [Listing]
@@ -505,99 +402,12 @@ struct ListingsView : View {
     }
 }
 
-struct SearchView : View {
-    
-    @Binding var areaName : String
-    var parentView : ContentView
-    
-    var body: some View {
-        HStack {
-            TextField("Enter area", text: $areaName)
-                .frame(width: 150, height: 50)
-                .textFieldStyle(SquareBorderTextFieldStyle())
-            
-            Button(action: {
-                self.parentView.prices = defaultTrend
-                self.parentView.listings = []
-                self.parentView.errorMessage = ""
-                
-                self.parentView.areaTitel = self.areaName
-                
-                self.parentView.getAllData(area: self.areaName)
-            }) {
-                Text("Search")
-            }
-        }
-    }
-}
-
-struct InfoView : View {
-    var body: some View  {
-        VStack {
-            Text("Real estate data analysis 🏡")
-                .font(.largeTitle).fontWeight(.heavy)
-                   
-            Text("Please search for an area of interest below to recive market data")
-                .font(.subheadline).fontWeight(.heavy)
-        }
-    }
-}
-
-struct PercentageChangeView : View {
-
-    var prices : [Double]
-    
-    func isPositiveTrend(percentage: Int) -> Bool {
-        return (percentage >= 0) ? true : false
-    }
-    
-    func priceIncrease(prices: [Double]) -> Int {
-        if let currentPrice = prices.last {
-            let percentage = Int((currentPrice / prices[0])*100)
-            return percentage - 100
-        }
-        return 0
-    }
-    
-    func plusOrMinus() -> String {
-        return (self.isPositiveTrend(percentage: self.priceIncrease(prices: self.prices))) ? "+ " : " "
-    }
-    
-    var body: some View {
-        
-        HStack {
-            Text("Percentage change: ").font(.subheadline).fontWeight(.heavy)
-            
-            Text("\(self.plusOrMinus()) \(self.priceIncrease(prices: self.prices))%")
-                .font(.subheadline)
-                .fontWeight(.heavy)
-                .foregroundColor(self.isPositiveTrend(percentage: self.priceIncrease(prices: self.prices)) ? Color.green : Color.red)
-            
-        }
-    }
-}
-
-struct ErrorView : View {
-    
-    @Binding var errorMessage : String
-    
-    var body: some View {
-        VStack {
-            Text("❌😩").font(.largeTitle)
-            Text(self.errorMessage).font(.subheadline).fontWeight(.heavy)
-            Button(action: {
-                self.errorMessage = ""
-            }) {
-                Text("Got it")
-            }
-        }.frame(width: 350, height: 200, alignment: .center).border(Color.white, width: 4)
-    }
-}
-
+//View for a single listing
 struct ListingView : View {
     
     var listing: Listing
     
+    //Opens the url in default browser
     func openUrlInBrowser(url: String) {
         if let url = URL(string: url) {
             if !NSWorkspace.shared.open(url) {
@@ -626,16 +436,104 @@ struct ListingView : View {
     }
 }
 
-struct BlueButtonStyle: ButtonStyle {
-    func makeBody(configuration: Self.Configuration) -> some View {
-        configuration.label
-            .foregroundColor(configuration.isPressed ? Color.blue : Color.white)
-            .background(configuration.isPressed ? Color.white : Color.blue)
-            .cornerRadius(2.0)
-            .padding()
+//View for the search bar
+struct SearchView : View {
+    
+    @Binding var areaName : String
+    var parentView : ContentView
+    
+    var body: some View {
+        HStack {
+            TextField("Enter area", text: $areaName)
+                .frame(width: 150, height: 50)
+                .textFieldStyle(SquareBorderTextFieldStyle())
+            
+            Button(action: {
+                //Resets values after last search results
+                self.parentView.prices = defaultTrend
+                self.parentView.listings = []
+                self.parentView.errorMessage = ""
+                
+                //Updates the areaTitel, which will update the state of the parent view
+                self.parentView.areaTitel = self.areaName
+                
+                self.parentView.getAllData(area: self.areaName)
+            }) {
+                Text("Search")
+            }
+        }
     }
 }
 
+struct InfoView : View {
+    var body: some View  {
+        VStack {
+            Text("Real estate data analysis 🏡")
+                .font(.largeTitle).fontWeight(.heavy)
+                   
+            Text("Please search for an area of interest below to recive market data")
+                .font(.subheadline).fontWeight(.heavy)
+        }
+    }
+}
+
+//View to display positive or negative trend in price data
+struct PercentageChangeView : View {
+
+    var prices : [Double]
+    
+    //Returns true if positive trend, else returns false
+    func isPositiveTrend(percentage: Int) -> Bool {
+        return (percentage >= 0) ? true : false
+    }
+    
+    //Returns the percentage change in price trend
+    func pricePercentageChange(prices: [Double]) -> Int {
+        if let currentPrice = prices.last {
+            let percentage = Int((currentPrice / prices[0])*100)
+            return percentage - 100
+        }
+        return 0
+    }
+    
+    //Returns "+" if positive trend, else returns "-"
+    func plusOrMinus() -> String {
+        return (self.isPositiveTrend(percentage: self.pricePercentageChange(prices: self.prices))) ? "+" : ""
+    }
+    
+    var body: some View {
+        
+        HStack {
+            Text("Percentage change: ").font(.subheadline).fontWeight(.heavy)
+            
+            Text("\(self.plusOrMinus()) \(self.pricePercentageChange(prices: self.prices))%")
+                .font(.subheadline)
+                .fontWeight(.heavy)
+                .foregroundColor(self.isPositiveTrend(percentage: self.pricePercentageChange(prices: self.prices)) ? Color.green : Color.red)
+            
+        }
+    }
+}
+
+//View that displays an error message
+struct ErrorView : View {
+    
+    @Binding var errorMessage : String
+    
+    var body: some View {
+        VStack {
+            Text("❌😩").font(.largeTitle)
+            Text(self.errorMessage).font(.subheadline).fontWeight(.heavy)
+            Button(action: {
+                self.errorMessage = ""
+            }) {
+                Text("Got it")
+            }
+        }.frame(width: 350, height: 200, alignment: .center).border(Color.white, width: 4)
+    }
+}
+
+//View that displays an Loading indicator, consisting of a rotating image
 struct LoadingIndicator: View {
     
     @State var spin = false
@@ -652,9 +550,15 @@ struct LoadingIndicator: View {
     }
 }
 
+//STYLES:
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView().padding(18)
+//Style for a blue button
+struct BlueButtonStyle: ButtonStyle {
+    func makeBody(configuration: Self.Configuration) -> some View {
+        configuration.label
+            .foregroundColor(configuration.isPressed ? Color.blue : Color.white)
+            .background(configuration.isPressed ? Color.white : Color.blue)
+            .cornerRadius(2.0)
+            .padding()
     }
 }
