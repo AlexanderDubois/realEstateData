@@ -1,21 +1,19 @@
-# Bostads analys🏡
+# Real estate analysis 🏡
 
-> Ett verktyg för att analyera fastighetsdata, såsom prisutveckling för olika bostadsområden. Projekt består av en MacOS app byggd med Swif, samt en Flask (Python) API som backend.
+> A tool to analyse Swedish property data, such as price trends for certain areas. The project consists of a macOS app built and Swift and a Flask API as backend (Python).
 
 ![](real_estate.gif)
 
 ### Backend:
-Flask API för att hämta, sortera och analyera fastighetesdata ifrån Booli.
-Primära teknologier:
+Flask API to fetch, sort and analyse property data from Booli.
 - Flask
 - Requests
 
 ### Frontend:
-En MacOS app skriven i Swift för att visualisera datan ifrån Python API:et.
-Primära teknologier:
-- SwiftUI - för allt det grafiska
-- URLSession för web requests
-- JSONSerilization för att parsa JSON data
-- Combine, för reactive programming
+A macOS app written in Swift to visualize and interact with the data from the backend.
+- SwiftUI
+- URLSession
+- JSONSerilization
+- Combine (Reactive programming)
 
-Skriven av: @Alexander Dubois 2019
+Written by: @Alexander Dubois 2019
